@@ -1,0 +1,153 @@
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-image: url('./assets/aboutback.jpg');
+  /* Replace with your image path or URL */
+  background-size: cover;
+  background-position: center;
+  color: #333;
+}
+.Titulli{
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 70%;
+  margin: 50px auto;
+  background-color: lightgray;
+  /* Light gray background */
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.contact-info {
+  padding: 30px;
+  width: 30%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #fff;
+  /* White background for info */
+  text-align: center;
+  /* Center-align text */
+}
+
+.contact-info p {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.contact-info i {
+  margin-right: 10px;
+}
+
+form {
+  flex: 1;
+  padding: 30px;
+  text-align: left;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 18px;
+  /* Increase font size */
+  color: #333;
+  /* Make text more visible */
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+button {
+  background-color: #007bff;
+  color: #fff;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.popup {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.5); /* Ngjyra e mbulimit */
+  width: 60%; /* Gjerësia e popup-it */
+  max-width: 400px; /* Gjerësia maksimale e popup-it */
+  padding: 20px;
+  border-radius: 10px;
+  z-index: 9999;
+}
+
+.popup-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.popup-content .close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+}
+
+/* Stili për butonin "Send Message" */
+#contactForm button {
+  margin-top: 20px; /* Hapësira mes butonit dhe mesazhit */
+}
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: #aaa;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: black;
+}
+
+
+.map-box {
+  width: 70%;
+  margin: 30px auto;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+.map {
+  width: 100%;
+  height: 400px;
+  /* Set your desired height */
+}
+
+footer {
+  background-color: #fff;
+  padding: 20px;
+  text-align: center;
+}
