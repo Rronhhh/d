@@ -1,80 +1,106 @@
 <?php
+session_start(); // Start the session
+
 include('config.php');
+include('session_manager.php'); 
 
-function updateProductStatistics($conn, $id, $action)
+class Product
 {
-  $sql = "SELECT * FROM products WHERE id = $id";
-  $result = $conn->query($sql);
+    private $conn;
 
-  if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $count = $row[$action] + 1;
-
-    $updateSql = "UPDATE products SET $action = $count WHERE id = $id";
-    $conn->query($updateSql);
-  } else {
-    // Handle the case where the product doesn't exist
-  }
-}
-
-function displayProducts($products, $category)
-{
-  echo "<h2>Top $category products</h2>";
-
-  if (!empty($products)) {
-    echo "<div class='products'>";
-    foreach ($products as $product) {
-      $imageSrc = $product['image_url']; // Use the image URL from the database
-      echo "<div class='product-card'>";
-      echo "<img class='product-image' src='$imageSrc' alt='{$product['product_name']}'>";
-      echo "<div class='product-details'>";
-      echo "<h3 class='product-title'>{$product['product_name']}</h3>";
-      echo "<p class='product-price'>$ {$product['price']}</p>";
-      echo "<button class='buy-button' onclick='redirectToProduct(" . $product['id'] . ")'>Buy Now</button>";
-      echo "</div></div>";
+    public function __construct($conn)
+    {
+        $this->conn = $conn;
     }
-    echo "</div>";
-  } else {
-    echo "<p>No $category products found.</p>";
-  }
+
+    public function updateProductStatistics($id, $action)
+    {
+        $sql = "SELECT * FROM products WHERE id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            $count = $row[$action] + 1;
+
+            $updateSql = "UPDATE products SET $action = ? WHERE id = ?";
+            $stmt = $this->conn->prepare($updateSql);
+            $stmt->bind_param("ii", $count, $id);
+            $stmt->execute();
+        } else {
+            // Handle the case where the product doesn't exist
+        }
+    }
+
+    public function displayProducts($category)
+    {
+        $html = "<h2>Top $category products</h2>";
+
+        $topProducts = $this->getTopProducts($category);
+
+        if (!empty($topProducts)) {
+            $html .= "<div class='products'>";
+            foreach ($topProducts as $product) {
+                $imageSrc = $product['image_url']; // Use the image URL from the database
+                $html .= "<div class='product-card'>";
+                $html .= "<img class='product-image' src='$imageSrc' alt='{$product['product_name']}'>";
+                $html .= "<div class='product-details'>";
+                $html .= "<h3 class='product-title'>{$product['product_name']}</h3>";
+                $html .= "<p class='product-price'>$ {$product['price']}</p>";
+                $html .= "<button class='buy-button' onclick='redirectToProduct(" . $product['id'] . ")'>Buy Now</button>";
+                $html .= "</div></div>";
+            }
+            $html .= "</div>";
+        } else {
+            $html .= "<p>No $category products found.</p>";
+        }
+
+        return $html;
+    }
+
+    private function getTopProducts($category)
+    {
+        $columnName = "`$category`";  // Enclose the category in backticks
+        $sql = "SELECT * FROM products ORDER BY $columnName DESC LIMIT 5";
+        $result = $this->conn->query($sql);
+
+        if (!$result) {
+            // Query failed, display error details
+            echo "Error: " . $this->conn->error;
+            return [];
+        }
+
+        $topProducts = [];
+        while ($row = $result->fetch_assoc()) {
+            $topProducts[] = $row;
+        }
+
+        return $topProducts;
+    }
 }
-function getTopProducts($conn, $category)
-{
-  $columnName = "`$category`";  // Enclose the category in backticks
-  $sql = "SELECT * FROM products ORDER BY $columnName DESC LIMIT 5";
-  $result = $conn->query($sql);
 
-  if (!$result) {
-    // Query failed, display error details
-    echo "Error: " . $conn->error;
-    return [];
-  }
+$product = new Product($conn);
 
-  $topProducts = [];
-  while ($row = $result->fetch_assoc()) {
-    $topProducts[] = $row;
-  }
 
-  return $topProducts;
-}
-$mostBoughtProducts = getTopProducts($conn, 'buy_count');
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  // Handle form submission
-  $name = isset($_POST['name']) ? $_POST['name'] : '';
-  $email = isset($_POST['email']) ? $_POST['email'] : '';
+    // Handle form submission
+    $name = isset($_POST['name']) ? $_POST['name'] : '';
+    $email = isset($_POST['email']) ? $_POST['email'] : '';
 
-  // Here, you can perform actions with the form data, like saving to a database.
+    // Here, you can perform actions with the form data, like saving to a database.
 
-  // Send a response back to the frontend
-  $response = ['status' => 'success', 'message' => 'Form submitted successfully'];
-  echo json_encode($response);
-  exit;
-
+    // Send a response back to the frontend
+    $response = ['status' => 'success', 'message' => 'Form submitted successfully'];
+    echo json_encode($response);
+    exit;
 }
-if(isset($_SESSION['id']) && isset($_SESSION['role']) && $_SESSION['role'] == 'admin') {
-  $role = true;
+
+if (isset($_SESSION['id']) && isset($_SESSION['role']) && $_SESSION['role'] == 'admin') {
+    $role = true;
 } else {
-  $role = false;
+    $role = false;
 }
 ?>
 
@@ -89,32 +115,7 @@ if(isset($_SESSION['id']) && isset($_SESSION['role']) && $_SESSION['role'] == 'a
 </head>
 
 <body>
-  <nav>
-    <div class="menu-icon">
-      <span class="fas fa-bars"></span>
-    </div>
-    <div class="logo">CodingNepal</div>
-    <div class="nav-items">
-      <li><a href="./home.php">Home</a></li>
-      <li><a href="./products.php">Products</a></li>
-      <li><a href="./about.php">About</a></li>
-      
-      <?php if($role): ?>
-        <li><a href="./products.php">Shto Produkte</a></li>
-        <?php endif; ?>
-      <li><a href="./contactUs.php">Contact</a></li>
-      <!-- <li><a href="#">Feedback</a></li> -->
-      <li>
-        <a href="./loginRegister.php" class="loginregister">Login/Register</a>
-      </li>
-    </div>
-    <div class="search-icon">
-      <span class="fas fa-search"></span>
-    </div>
-    <div class="cancel-icon">
-      <span class="fas fa-times"></span>
-    </div>
-  </nav>
+<?php include('header.php'); ?>
   <section class="FirstSection">
     <div class="BannerContainer">
       <div class="Banner-first-div">
@@ -133,7 +134,7 @@ if(isset($_SESSION['id']) && isset($_SESSION['role']) && $_SESSION['role'] == 'a
     <div class="products">
     <div class="products">
    
-      <?php displayProducts($mostBoughtProducts, 'most bought'); ?>
+     <?php $product->displayProducts('most bought'); ?>
     
     </div>
 

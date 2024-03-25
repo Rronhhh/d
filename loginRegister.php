@@ -1,130 +1,126 @@
 <?php
-include('config.php');
-if (session_status() === PHP_SESSION_NONE) {
-  session_start();
-}
+include('config.php'); // Include database connection
+include('AuthService.php');// Include AuthService class
+include('User.php'); // Include User class
+include('functions.php');
+
+// Create database connection
+$dbConnection = new dbConnect();
+$conn = $dbConnection->connectDB();
+
+// Initialize AuthService with database connection
+AuthService::init($conn);
+
+// Check if the form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = sanitizeInput($_POST['username']);
-    $email = sanitizeInput($_POST['email']);
-    $password = sanitizeInput($_POST['password']);
-    $role = $_POST['role']; // Tani duhet të validohet në formë më të rreptë
+    // If the form is for registration
+    if (isset($_POST['register'])) {
+        $username = sanitizeInput($_POST['username']);
+        $email = sanitizeInput($_POST['email']);
+        $password = sanitizeInput($_POST['password']);
+        $role = $_POST['role']; // Should be validated further
 
-    if ($role != 'admin') {
-        $role = 'user';
+        // Register the user
+        if (AuthService::registerUser(new User($username, $password, $email, $role))) {
+            echo "Registration successful.";
+            // Redirect to admin page if user is an admin
+            if ($role === 'admin') {
+                header("Location: adminPage.php");
+            } else {
+                // Redirect to home page or any other page
+                header("Location: home.php");
+            }
+            exit();
+        } else {
+            echo "Registration failed.";
+        }
     }
+    // If the form is for login
+    elseif (isset($_POST['login'])) {
+        $username = sanitizeInput($_POST['username']);
+        $password = sanitizeInput($_POST['password']);
 
-    if (registerUser($username, $password, $email, $role)) {
-        echo "Registration successful.";
-        header("Location: login.php");
-        exit();
-    } else {
-        echo "Registration failed.";
+        // Attempt to login the user
+        if (AuthService::loginUser($username, $password)) {
+            // Redirect to admin page if user is an admin
+            $user = AuthService::getUserByUsername($username);
+            if ($user && $user['role'] === 'admin') {
+                header("Location: adminPage.php");
+            } else {
+                // Login successful, redirect to home page or dashboard
+                header("Location: home.php");
+            }
+            exit();
+        } else {
+            // Login failed, display error message
+            echo "Invalid username or password.";
+        }
     }
 }
-?><!DOCTYPE html>
+?>
+
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="./css/styles.css">
-  <link rel="stylesheet" href="./css/loginRegisterStyle.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-  <title>Login/Register Page</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login/Register Page</title>
+    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/loginRegisterStyle.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 
 <body>
-  <nav>
-    <div class="menu-icon">
-      <span class="fas fa-bars"></span>
+    <?php include('header.php'); ?>
+
+    <div class="container">
+        <div class="login-form" id="loginContainer">
+            <h2>Login</h2>
+            <form action="loginRegister.php" method="post">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required />
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required />
+                <button type="submit" name="login">Login</button>
+            </form>
+            <p>Don't have an account? <a href="javascript:void(0);" onclick="toggleForms()">Register here</a></p>
+        </div>
+
+        <div class="register-form" id="registerContainer" style="display: none">
+            <h2>Register</h2>
+            <form action="loginRegister.php" method="post">
+                <label for="username">Username:</label>
+                <input type="text" id="usernameRegister" name="username" required><br><br>
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required><br><br>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required><br><br>
+                <label for="role">Role:</label>
+                <select id="role" name="role">
+                    <option value="admin">Admin</option>
+                    <option value="user">User</option>
+                </select><br><br>
+                <button type="submit" name="register">Register</button>
+            </form>
+            <p>Already have an account? <a href="javascript:void(0);" onclick="toggleForms()">Login here</a></p>
+        </div>
     </div>
-    <div class="logo">CodingNepal</div>
-    <div class="nav-items">
-      <li><a href="./home.php">Home</a></li>
-      <li><a href="./products.php">Products</a></li>
-      <li><a href="./about.php">About</a></li>
-      <li><a href="./contactUs.php">Contact</a></li>
-      <li><a href="./loginRegister.php" class="loginregister">Login/Register</a></li>
-    </div>
-    <div class="search-icon">
-      <span class="fas fa-search"></span>
-    </div>
-    <div class="cancel-icon">
-      <span class="fas fa-times"></span>
-    </div>
-  </nav>
 
-  <div class="container" id="loginContainer">
-  <form action="login.php" method="post">
-      <h2>Login</h2>
-     
-      <label for="username">Username:</label>
-      <input type="text" id="username" name="username" required />
-
-      <label for="password">Password:</label>
-      <input type="password" id="password" name="password" required />
-
-      <button type="submit" name="login">Login</button>
-    </form>
-    <p>Don't have an account? <a href="javascript:void(0);" onclick="toggleForms()">Register here</a></p>
-  </div>
-
-  <div class="container" id="registerContainer" style="display: none">
-   <form action="register.php" method="post">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br><br>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required><br><br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br><br>
-        <label for="role">Role:</label>
-        <select id="role" name="role">
-            <option value="admin">Admin</option>
-            <option value="user">User</option>
-        </select><br><br>
-        <button type="submit">Register</button>
-    </form>
-    <p>Already have an account? <a href="javascript:void(0);" onclick="toggleForms()">Login here</a></p>
-  </div>
-
- 
-  <script>
-    function toggleForms() {
-      var loginContainer = document.getElementById("loginContainer");
-      var registerContainer = document.getElementById("registerContainer");
-      if (loginContainer.style.display === "none") {
-        loginContainer.style.display = "block";
-        registerContainer.style.display = "none";
-      } else {
-        loginContainer.style.display = "none";
-        registerContainer.style.display = "block";
-      }
-    }
-    const menuBtn = document.querySelector(".menu-icon span");
-    const searchBtn = document.querySelector(".search-icon");
-    const cancelBtn = document.querySelector(".cancel-icon");
-    const items = document.querySelector(".nav-items");
-    const form = document.querySelector("form");
-    menuBtn.onclick = () => {
-      items.classList.add("active");
-      menuBtn.classList.add("hide");
-      searchBtn.classList.add("hide");
-      cancelBtn.classList.add("show");
-    };
-    cancelBtn.onclick = () => {
-      items.classList.remove("active");
-      menuBtn.classList.remove("hide");
-      searchBtn.classList.remove("hide");
-      cancelBtn.classList.remove("show");
-      form.classList.remove("active");
-      cancelBtn.style.color = "#ff3d00";
-    };
-    searchBtn.onclick = () => {
-      form.classList.add("active");
-      searchBtn.classList.add("hide");
-      cancelBtn.classList.add("show");
-    };
-  </script>
+    <script>
+        function toggleForms() {
+            var loginContainer = document.getElementById("loginContainer");
+            var registerContainer = document.getElementById("registerContainer");
+            if (loginContainer.style.display === "none") {
+                loginContainer.style.display = "block";
+                registerContainer.style.display = "none";
+            } else {
+                loginContainer.style.display = "none";
+                registerContainer.style.display = "block";
+            }
+        }
+    </script>
 </body>
 
 </html>

@@ -4,30 +4,30 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Kontrolloni nëse është dorëzuar një kërkesë POST
+// Check if a POST request is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Kontrolloni nëse është dërguar një fushë dhe një vlerë për fshirje
-    if(isset($_POST['field']) && isset($_POST['value'])) {
-        // Lidhja me bazën e të dhënave
-        include('config.php');
-
+    // Check if both field and value for deletion are provided
+    if (isset($_POST['field']) && isset($_POST['value'])) {
+        // Get the field and value for deletion
         $field = $_POST['field'];
         $value = $_POST['value'];
 
-        // SQL query për të fshirë produktin nga tabela e produkteve
-        $sql = "DELETE FROM products WHERE $field = '$value'";
+        // SQL query to delete the product from the products table
+        $sql = "DELETE FROM products WHERE $field = ?";
+        $statement = $conn->prepare($sql);
+        $statement->bind_param("s", $value);
 
-        if (mysqli_query($conn, $sql)) {
-            $message = "Produkti u fshi me sukses.";
+        if ($statement->execute()) {
+            $message = "Product deleted successfully.";
         } else {
-            $error = "Gabim gjatë fshirjes së produktit: " . mysqli_error($conn);
+            $error = "Error deleting product: " . $conn->error;
         }
 
-        // Mbyll lidhjen me bazën e të dhënave
-        mysqli_close($conn);
+        // Close the prepared statement
+        $statement->close();
     } else {
-        // Nëse nuk janë dërguar të gjitha fushat e nevojshme, shfaqni një mesazh gabimi
-        $error = "Gabim: Fusha dhe vlera për fshirje nuk janë dërguar saktësisht.";
+        // If not all necessary fields are provided, show an error message
+        $error = "Error: Field and value for deletion are not provided correctly.";
     }
 }
 ?>
@@ -37,7 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delete Product</title>
-    <!-- CSS stili dhe JavaScript mund të shtohen këtu -->
     <style>
         body {
             font-family: Arial, sans-serif;
