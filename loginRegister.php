@@ -1,12 +1,11 @@
 <?php
-include('config.php'); // Include database connection
+// include('config.php'); // Include database connection
 include('AuthService.php');// Include AuthService class
 include('User.php'); // Include User class
 include('functions.php');
+// include('Session.php');
 
-// Create database connection
-$dbConnection = new dbConnect();
-$conn = $dbConnection->connectDB();
+var_dump($_POST);
 
 // Initialize AuthService with database connection
 AuthService::init($conn);
@@ -48,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: adminPage.php");
             } else {
                 // Login successful, redirect to home page or dashboard
-                header("Location: home.php");
+                header("Location: userDashboard.php");
             }
             exit();
         } else {
@@ -58,8 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -73,12 +70,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
-    <?php include('header.php'); ?>
+    <nav>
+        <div class="menu-icon">
+            <span class="fas fa-bars"></span>
+        </div>
+        <div class="logo">MobilShop Titani</div>
+        <div class="nav-items">
+            <li><a href="./home.php">Home</a></li>
+            <li><a href="./display_products.php">Products</a></li>
+            <li><a href="./about.php">About Us</a></li>
+            <li><a href="./contactUs.php">Contact US</a></li>
+            <li>
+                <a href="./loginRegister.php" class="loginregister">Login/Register</a>
+            </li>
+        </div>
+        <div class="search-icon">
+            <span class="fas fa-search"></span>
+        </div>
+        <div class="cancel-icon">
+            <span class="fas fa-times"></span>
+        </div>
+    </nav>
 
     <div class="container">
         <div class="login-form" id="loginContainer">
             <h2>Login</h2>
-            <form action="loginRegister.php" method="post">
+            <?php if (isset($login_error)) { ?>
+                <p style="color: red;"><?php echo $login_error; ?></p>
+            <?php } ?>
+            <form action="loginRegister.php" method="post" onsubmit="return validateLogin()">
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username" required />
                 <label for="password">Password:</label>
@@ -90,13 +110,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="register-form" id="registerContainer" style="display: none">
             <h2>Register</h2>
-            <form action="loginRegister.php" method="post">
+            <form action="loginRegister.php" method="post" onsubmit="return validateRegister()">
                 <label for="username">Username:</label>
-                <input type="text" id="usernameRegister" name="username" required><br><br>
+                <input type="text" id="regUsername" name="username" required><br><br>
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required><br><br>
+                <input type="email" id="regEmail" name="email" required><br><br>
                 <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required><br><br>
+                <input type="password" id="regPassword" name="password" required><br><br>
                 <label for="role">Role:</label>
                 <select id="role" name="role">
                     <option value="admin">Admin</option>
@@ -108,6 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
+    <script src="./js/registerLogin.js"></script>
     <script>
         function toggleForms() {
             var loginContainer = document.getElementById("loginContainer");

@@ -16,16 +16,23 @@ class AuthService {
 
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-        $query = "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)";
-        $statement = self::$dbConnection->prepare($query);
-        $statement->bindParam(1, $username);
-        $statement->bindParam(2, $email);
-        $statement->bindParam(3, $hashedPassword);
-        $statement->bindParam(4, $role);
-        $result = $statement->execute();
-        $statement->closeCursor();
+        try {
+            $query = "INSERT INTO users (username, email, password, role) VALUES (:username, :email, :password, :role)";
+$statement = self::$dbConnection->prepare($query);
+$statement->bindParam(':username', $username);
+$statement->bindParam(':email', $email);
+$statement->bindParam(':password', $hashedPassword);
+$statement->bindParam(':role', $role);
+$result = $statement->execute();
+$statement->closeCursor();
 
-        return $result;
+            return $result;
+        } catch (PDOException $e) {
+            // Handle database error
+            // You can log the error, display a user-friendly message, etc.
+            echo "Registration failed. Error: " . $e->getMessage();
+            return false;
+        }
     }
 
     // Login user

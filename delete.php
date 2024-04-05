@@ -1,7 +1,36 @@
 <?php
 include('config.php');
-if (session_status() === PHP_SESSION_NONE) {
+if (session_status() == PHP_SESSION_NONE) {
     session_start();
+}
+
+class ProductManager {
+    private $conn;
+
+    public function __construct($conn) {
+        $this->conn = $conn;
+    }
+
+    public function deleteProduct($field, $value) {
+        // SQL query to delete the product from the products table
+        $sql = "DELETE FROM products WHERE $field = ?";
+        
+        // Prepare the SQL statement
+        $statement = $this->conn->prepare($sql);
+
+        // Bind parameters
+        $statement->bind_param("s", $value);
+
+        // Execute the statement
+        if ($statement->execute()) {
+            return "Product deleted successfully.";
+        } else {
+            return "Error deleting product: " . $this->conn->error;
+        }
+
+        // Close the prepared statement
+        $statement->close();
+    }
 }
 
 // Check if a POST request is submitted
@@ -12,25 +41,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $field = $_POST['field'];
         $value = $_POST['value'];
 
-        // SQL query to delete the product from the products table
-        $sql = "DELETE FROM products WHERE $field = ?";
-        $statement = $conn->prepare($sql);
-        $statement->bind_param("s", $value);
+        // Create a new instance of ProductManager class
+        $productManager = new ProductManager($conn);
 
-        if ($statement->execute()) {
-            $message = "Product deleted successfully.";
-        } else {
-            $error = "Error deleting product: " . $conn->error;
-        }
-
-        // Close the prepared statement
-        $statement->close();
+        // Delete the product
+        $message = $productManager->deleteProduct($field, $value);
     } else {
         // If not all necessary fields are provided, show an error message
         $error = "Error: Field and value for deletion are not provided correctly.";
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,62 +62,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <style>
         body {
             font-family: Arial, sans-serif;
-        }
-        form {
-            max-width: 400px;
-            margin: 0 auto;
-            padding: 20px;
             background-color: #f4f4f4;
-            border-radius: 8px;
+            margin: 100;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
+
+        form {
+            margin-bottom: 20px;
+        }
+
         label {
             display: block;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
-        select, input {
+
+        select,
+        input[type="text"] {
             width: 100%;
             padding: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
             box-sizing: border-box;
         }
-        button[type="submit"] {
+
+        button {
+            padding: 10px 20px;
             background-color: #007bff;
             color: #fff;
             border: none;
             border-radius: 5px;
-            padding: 12px 20px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
         }
-        button[type="submit"]:hover {
-            background-color: #0056b3;
-        }
+
         .message {
-            margin-top: 20px;
             padding: 10px;
             border-radius: 5px;
+            margin-top: 10px;
         }
-        .error {
-            background-color: #ffcccc;
-            border: 1px solid #ff9999;
-            color: #cc0000;
+
+        .message.error {
+            background-color: #dc3545;
+            color: #fff;
         }
-        .success {
-            background-color: #ccffcc;
-            border: 1px solid #99ff99;
-            color: #009900;
+
+        .message.success {
+            background-color: #28a745;
+            color: #fff;
         }
     </style>
 </head>
 <body>
+<?php
+include('header.php');?>
     <form method="post" action="">
         <label for="field">Choose Field:</label>
         <select name="field" id="field" required>
             <option value="id">ID</option>
-            <option value="product_name">Product Name</option>
+            <option value="name">Product Name</option>
             <option value="price">Price</option>
             <option value="description">Description</option>
             <option value="image_url">Image URL</option>

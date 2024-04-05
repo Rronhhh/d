@@ -314,7 +314,7 @@ nav li a.loginregister {
 }
 
 .HomeCards div {
-  position: relative;
+  /* position: relative; */
   width: 400px;
   height: 200px;
   border: 1px solid grey;

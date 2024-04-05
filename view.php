@@ -1,42 +1,50 @@
 <?php
-session_start();
-include('session_manager.php');
+
+include('Session.php');
+
 class HistoryController {
     private $conn;
 
     public function __construct($servername, $username, $password, $dbname) {
-        // Create database connection
-        $this->conn = new mysqli($servername, $username, $password, $dbname);
-
-        // Check connection
-        if ($this->conn->connect_error) {
-            die("Connection failed: " . $this->conn->connect_error);
+        try {
+            // Create database connection using PDO
+            $dsn = "mysql:host=$servername;dbname=$dbname";
+            $this->conn = new PDO($dsn, $username, $password);
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (PDOException $e) {
+            // If connection fails, display error message and terminate script
+            die("Connection failed: " . $e->getMessage());
         }
     }
 
     public function displayHistory() {
-        // SQL query to select actions from the history table
-        $query = "SELECT * FROM historiku";
-        $result = $this->conn->query($query);
+        try {
+            // SQL query to select actions from the history table
+            $query = "SELECT * FROM historiku";
+            $stmt = $this->conn->query($query);
 
-        // Display actions from history on the page if there are results
-        if ($result->num_rows > 0) {
-            echo "<h2>Historiku i Veprimeve</h2>";
-            echo "<ul>";
-            while ($row = $result->fetch_assoc()) {
-                echo "<li>";
-                echo "Përdoruesi ID: " . $row['perdorues_id'] . " - Veprimi: " . $row['veprimi'] . " - Data: " . $row['data'];
-                echo "</li>";
+            // Display actions from history on the page if there are results
+            if ($stmt->rowCount() > 0) {
+                echo "<h2>Historiku i Veprimeve</h2>";
+                echo "<ul>";
+                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    echo "<li>";
+                    echo "Përdoruesi ID: " . $row['perdorues_id'] . " - Veprimi: " . $row['veprimi'] . " - Data: " . $row['data'];
+                    echo "</li>";
+                }
+                echo "</ul>";
+            } else {
+                echo "<p class='no-results'>Nuk ka veprime të regjistruara në historik.</p>";
             }
-            echo "</ul>";
-        } else {
-            echo "<p class='no-results'>Nuk ka veprime të regjistruara në historik.</p>";
+        } catch (PDOException $e) {
+            // If query fails, display error message
+            echo "Error: " . $e->getMessage();
         }
     }
 
     public function closeConnection() {
         // Close the database connection
-        $this->conn->close();
+        $this->conn = null;
     }
 }
 

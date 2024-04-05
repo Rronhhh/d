@@ -9,17 +9,16 @@ function validateLogin() {
   var passwordRegex = /^.{6,}$/;
 
   if (!usernameRegex.test(username)) {
-    alert("Invalid username. Please use only letters and numbers.");
-    return false;
+      alert("Invalid username. Please use only letters and numbers.");
+      return false;
   }
 
   if (!passwordRegex.test(password)) {
-    alert("Invalid password. Minimum 6 characters required.");
-    return false;
+      alert("Invalid password. Minimum 6 characters required.");
+      return false;
   }
 
   // Perform login logic here (e.g., send data to the server)
-  alert("Login successful!");
   return true;
 }
 
@@ -38,21 +37,20 @@ function validateRegister() {
   var passwordRegex = /^.{6,}$/;
 
   if (!usernameRegex.test(regUsername)) {
-    alert("Invalid username. Please use only letters and numbers.");
-    return false;
+      alert("Invalid username. Please use only letters and numbers.");
+      return false;
   }
 
   if (!emailRegex.test(regEmail)) {
-    alert("Invalid email address.");
-    return false;
+      alert("Invalid email address.");
+      return false;
   }
 
   if (!passwordRegex.test(regPassword)) {
-    alert("Invalid password. Minimum 6 characters required.");
-    return false;
+      alert("Invalid password. Minimum 6 characters required.");
+      return false;
   }
 
   // Perform registration logic here (e.g., send data to the server)
-  alert("Registration successful!");
   return true;
 }

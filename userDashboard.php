@@ -1,6 +1,8 @@
 <?php
-include('config.php');
-session_start();
+include('Session.php');
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Check if user is logged in
 if (!isset($_SESSION['id'])) {
@@ -10,11 +12,14 @@ if (!isset($_SESSION['id'])) {
 
 // Check if user is not admin
 if ($_SESSION['role'] != 'admin') {
-    header('Location: userDashboard.php');
+    header('Location: home.php');
     exit();
 }
 
-// Page content for admin
+if ($_SESSION['role'] == 'admin') {
+    header('Location: adminDashboard.php');
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

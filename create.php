@@ -1,39 +1,47 @@
 <?php
-// Include or require the config.php file
 include('config.php');
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
-// Check if a POST request is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Check if both field and value for deletion are provided
-    if (isset($_POST['field']) && isset($_POST['value'])) {
-        // Get the field and value for deletion
-        $field = $_POST['field'];
-        $value = $_POST['value'];
+    if (isset($_POST['product_name']) && isset($_POST['price']) && isset($_POST['description']) && isset($_POST['image_url'])) {
+        $product_name = $_POST['product_name'];
+        $price = $_POST['price'];
+        $description = $_POST['description'];
+        $image_url = $_POST['image_url'];
 
-        // SQL query to delete the product from the products table
-        $sql = "DELETE FROM products WHERE $field = ?";
-        $statement = $conn->prepare($sql);
-        $statement->bind_param("s", $value);
+        try {
+            // Prepare SQL statement
+            $sql = "INSERT INTO products (product_name, price, description, image_url) VALUES (?, ?, ?, ?)";
+            $statement = $conn->prepare($sql);
 
-        if ($statement->execute()) {
-            $message = "Product deleted successfully.";
-        } else {
-            $error = "Error deleting product: " . $conn->error;
+            // Bind parameters
+            $statement->bindParam(1, $product_name);
+            $statement->bindParam(2, $price);
+            $statement->bindParam(3, $description);
+            $statement->bindParam(4, $image_url);
+
+            // Execute statement
+            if ($statement->execute()) {
+                $message = "Product added successfully.";
+            } else {
+                $error = "Error adding product: " . $statement->errorInfo()[2];
+            }
+        } catch (PDOException $e) {
+            $error = "Error: " . $e->getMessage();
         }
-
-        // Close the prepared statement
-        $statement->close();
     } else {
-        // If not all necessary fields are provided, show an error message
-        $error = "Error: Field and value for deletion are not provided correctly.";
+        $error = "Error: All fields are required.";
     }
 
-    // Close the database connection if it's set and valid
-    if (isset($conn) && $conn instanceof mysqli) {
-        mysqli_close($conn);
+    if (isset($conn)) {
+        $conn = null; // Close the connection
     }
 }
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -106,6 +114,8 @@ button[type="submit"]:hover {
     </style>
 </head>
 <body>
+<?php
+include('header.php');?>
     <div class="container">
         <h2>Add Product</h2>
         <form method="post" action="">

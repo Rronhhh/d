@@ -1,88 +1,16 @@
 <?php
-session_start(); // Start the session
+include('Session.php'); // Include Session class
+if (session_status() == PHP_SESSION_NONE) {
+  session_start();
+}
+include('product_manager.php'); // Include ProductManager class
 
-include('config.php');
-include('session_manager.php'); 
-
-class Product
-{
-    private $conn;
-
-    public function __construct($conn)
-    {
-        $this->conn = $conn;
-    }
-
-    public function updateProductStatistics($id, $action)
-    {
-        $sql = "SELECT * FROM products WHERE id = ?";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result->num_rows > 0) {
-            $row = $result->fetch_assoc();
-            $count = $row[$action] + 1;
-
-            $updateSql = "UPDATE products SET $action = ? WHERE id = ?";
-            $stmt = $this->conn->prepare($updateSql);
-            $stmt->bind_param("ii", $count, $id);
-            $stmt->execute();
-        } else {
-            // Handle the case where the product doesn't exist
-        }
-    }
-
-    public function displayProducts($category)
-    {
-        $html = "<h2>Top $category products</h2>";
-
-        $topProducts = $this->getTopProducts($category);
-
-        if (!empty($topProducts)) {
-            $html .= "<div class='products'>";
-            foreach ($topProducts as $product) {
-                $imageSrc = $product['image_url']; // Use the image URL from the database
-                $html .= "<div class='product-card'>";
-                $html .= "<img class='product-image' src='$imageSrc' alt='{$product['product_name']}'>";
-                $html .= "<div class='product-details'>";
-                $html .= "<h3 class='product-title'>{$product['product_name']}</h3>";
-                $html .= "<p class='product-price'>$ {$product['price']}</p>";
-                $html .= "<button class='buy-button' onclick='redirectToProduct(" . $product['id'] . ")'>Buy Now</button>";
-                $html .= "</div></div>";
-            }
-            $html .= "</div>";
-        } else {
-            $html .= "<p>No $category products found.</p>";
-        }
-
-        return $html;
-    }
-
-    private function getTopProducts($category)
-    {
-        $columnName = "`$category`";  // Enclose the category in backticks
-        $sql = "SELECT * FROM products ORDER BY $columnName DESC LIMIT 5";
-        $result = $this->conn->query($sql);
-
-        if (!$result) {
-            // Query failed, display error details
-            echo "Error: " . $this->conn->error;
-            return [];
-        }
-
-        $topProducts = [];
-        while ($row = $result->fetch_assoc()) {
-            $topProducts[] = $row;
-        }
-
-        return $topProducts;
-    }
+// Ensure $conn is defined and initialized
+if (!isset($conn)) {
+    die("Connection is not established.");
 }
 
-$product = new Product($conn);
-
+$product_manager = new ProductManager($conn); // Pass $conn to the ProductManager class constructor
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle form submission
@@ -129,22 +57,21 @@ if (isset($_SESSION['id']) && isset($_SESSION['role']) && $_SESSION['role'] == '
       <div class="Banner-second-div"><img src="assets/iphone13.avif" /></div>
     </div>
   </section>
-  <section class="ProductsSection">
+  <!-- <section class="ProductsSection">
     <h1>Our on <span>sale</span> products</h1>
     <div class="products">
     <div class="products">
    
-     <?php $product->displayProducts('most bought'); ?>
-    
+     
     </div>
 
       
       </div>
    
-    <button class="show-all-button" onclick="window.location.href='products.php'">
+    <button class="show-all-button" onclick="window.location.href='display_products.php'">
       Show All Products
     </button>
-  </section>
+  </section> -->
   <section class="TeamSection">
     <div class="team">
       <img src="assets/team.webp" />
@@ -165,7 +92,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['role']) && $_SESSION['role'] == '
     <div class="HomeCards">
       <a href="#">
         <div>
-          <img src="assets/pexels-photo-404280.webp" />
+          <!-- <img src="assets/pexels-photo-404280.webp" /> -->
           <h1>Shop Phones.</h1>
           <p>Discover cutting-edge smartphones for every lifestyle.</p>
         </div>
@@ -173,14 +100,14 @@ if (isset($_SESSION['id']) && isset($_SESSION['role']) && $_SESSION['role'] == '
 
       <a href="#">
         <div>
-          <img src="assets/mobilecase.jpeg" />
+          <!-- <img src="assets/mobilecase.jpeg" /> -->
           <h1>Shop Cases.</h1>
           <p>Protect your device with stylish and durable phone cases.</p>
         </div>
       </a>
       <a href="#">
         <div>
-          <img src="assets/headphones.webp" />
+          <!-- <img src="assets/headphones.webp" /> -->
           <h1>Shop Headphones.</h1>
           <p>
             Immerse yourself in premium audio experiences with our headphones.
@@ -189,21 +116,21 @@ if (isset($_SESSION['id']) && isset($_SESSION['role']) && $_SESSION['role'] == '
       </a>
       <a href="#">
         <div>
-          <img src="assets/smartwatch.webp" />
+          <!-- <img src="assets/smartwatch.webp" /> -->
           <h1>Shop SmartWatches.</h1>
           <p>Stay connected and stylish with our range of smartwatches.</p>
         </div>
       </a>
       <a href="#">
         <div>
-          <img src="assets/charger.jpeg" />
+          <!-- <img src="assets/charger.jpeg" /> -->
           <h1>Shop Chargers.</h1>
           <p>Power up your devices with our reliable and fast chargers.</p>
         </div>
       </a>
       <a href="#">
         <div>
-          <img src="assets/phoneaccesories.jpeg" />
+          <!-- <img src="assets/phoneaccesories.jpeg" /> -->
           <h1>Shop Accesories.</h1>
           <p>Elevate your mobile experience with stylish accessories.</p>
         </div>

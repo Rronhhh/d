@@ -16,7 +16,7 @@
     <div class="logo">MobilShop Titani</div>
     <div class="nav-items">
       <li><a href="./home.php">Home</a></li>
-      <li><a href="./products.php">Products</a></li>
+      <li><a href="./display_products.php">Products</a></li>
       <li><a href="./about.php">About Us</a></li>
       <li><a href="./contactUs.php">Contact US</a></li>
            <li>

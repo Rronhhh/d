@@ -1,4 +1,10 @@
 <?php
+include('Session.php');// Include session.php if needed
+include('config.php');
+// Start the session if required
+
+    session_start();
+
 
 class User {
     private $username;
